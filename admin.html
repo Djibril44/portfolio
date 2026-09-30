@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Mise à jour du portfolio</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rufina:wght@700&family=Rubik:wght@400;500;600&display=swap">
+  <style>
+    :root {
+      --bg: #F6F7FB; --surface: #FFFFFF; --text: #10285D; --muted: #57667E; --heading: #000A2D;
+      --border: #DCE3F0; --primary: #1F2B7B; --primary-soft: #EEF0FA;
+      --accent: #CC3D33; --accent-hover: #B3322A; --accent-soft: #FFF4F4;
+      --ok: #1D7A4E; --ok-soft: #E8F5EE; --warn: #9A5B00; --warn-soft: #FFF6E5;
+      --radius: 6px;
+      --font: "Rubik", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --font-display: "Rufina", Georgia, serif;
+    }
+    * { box-sizing: border-box; margin: 0; }
+    body { font: 15px/1.5 var(--font); color: var(--text); background: var(--bg); }
+    button, input, textarea, select { font: inherit; color: inherit; }
+    a { color: var(--accent); }
+
+    /* ---- Barre du haut ---- */
+    .topbar {
+      position: sticky; top: 0; z-index: 10;
+      display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1rem;
+      padding: .8rem 1.25rem;
+      background: var(--surface); border-bottom: 1px solid var(--border);
+    }
+    .topbar h1 { font: 700 1.25rem/1.2 var(--font-display); color: var(--heading); margin-right: auto; }
+    .topbar h1 small { display: block; font: 400 .8rem var(--font); color: var(--muted); }
+    .actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+    .btn {
+      display: inline-flex; align-items: center; gap: .4rem;
+      padding: .5rem .9rem; border-radius: var(--radius);
+      border: 1px solid var(--border); background: var(--surface);
+      cursor: pointer; font-weight: 500; font-size: .9rem; white-space: nowrap;
+    }
+    .btn:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-hover); color: #fff; }
+    .btn-small { padding: .25rem .55rem; font-size: .8rem; }
+    .btn-icon { padding: .25rem .5rem; min-width: 2rem; justify-content: center; }
+    .btn-danger:hover { border-color: var(--accent); background: var(--accent-soft); }
+
+    .status { font-size: .82rem; padding: .35rem .7rem; border-radius: 999px; background: var(--primary-soft); color: var(--primary); }
+    .status.dirty { background: var(--warn-soft); color: var(--warn); }
+    .status.ok { background: var(--ok-soft); color: var(--ok); }
+
+    /* ---- Mise en page ---- */
+    .layout { display: grid; grid-template-columns: 230px minmax(0, 1fr); max-width: 1180px; margin: 0 auto; gap: 1.5rem; padding: 1.5rem 1.25rem 4rem; }
+    .tabs { display: flex; flex-direction: column; gap: .2rem; position: sticky; top: 90px; align-self: start; }
+    .tab {
+      display: flex; justify-content: space-between; align-items: center; gap: .5rem;
+      text-align: left; padding: .55rem .8rem; border-radius: var(--radius);
+      border: 0; background: transparent; cursor: pointer; font-size: .93rem;
+    }
+    .tab:hover { background: var(--primary-soft); }
+    .tab[aria-selected="true"] { background: var(--primary); color: #fff; }
+    .tab .count { font-size: .75rem; opacity: .75; }
+    .tabs hr { border: 0; border-top: 1px solid var(--border); margin: .5rem 0; }
+
+    .lang-switch { display: inline-flex; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--surface); }
+    .lang-switch button { border: 0; background: transparent; padding: .35rem .75rem; cursor: pointer; font-size: .85rem; font-weight: 500; }
+    .lang-switch button[aria-pressed="true"] { background: var(--primary); color: #fff; }
+
+    .panel-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .8rem; margin-bottom: 1rem; }
+    .panel-head h2 { font: 700 1.5rem/1.2 var(--font-display); color: var(--heading); }
+    .panel-intro { color: var(--muted); font-size: .92rem; margin-bottom: 1.2rem; max-width: 46rem; }
+
+    /* ---- Champs ---- */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1rem 1.2rem; }
+    .fields { display: grid; gap: 1rem; }
+    .field > label, .field > .label { display: block; font-weight: 500; font-size: .88rem; color: var(--heading); margin-bottom: .3rem; }
+    .hint { font-size: .8rem; color: var(--muted); margin: -.1rem 0 .35rem; }
+    input[type=text], textarea, select {
+      width: 100%; padding: .5rem .65rem;
+      border: 1px solid var(--border); border-radius: var(--radius); background: #fff;
+    }
+    textarea { min-height: 4.6rem; resize: vertical; }
+    input:focus, textarea:focus, select:focus { outline: 2px solid var(--primary); outline-offset: 0; border-color: var(--primary); }
+    .check { display: inline-flex; align-items: center; gap: .45rem; margin-right: 1rem; font-size: .92rem; }
+    .group { border-left: 3px solid var(--primary-soft); padding-left: .9rem; display: grid; gap: .9rem; }
+    .group-title { font-size: .78rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; }
+    .thumb { display: block; margin-top: .4rem; max-width: 140px; max-height: 90px; border-radius: 4px; border: 1px solid var(--border); object-fit: cover; }
+
+    /* ---- Listes ---- */
+    .list { display: grid; gap: .6rem; }
+    .row { display: flex; gap: .4rem; align-items: flex-start; }
+    .row > input, .row > textarea { flex: 1; }
+    .item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+    .item > summary {
+      display: flex; align-items: center; gap: .6rem;
+      padding: .7rem .9rem; cursor: pointer; list-style: none;
+    }
+    .item > summary::-webkit-details-marker { display: none; }
+    .item > summary::before { content: "▸"; color: var(--muted); transition: transform .15s; }
+    .item[open] > summary::before { transform: rotate(90deg); }
+    .item-title { flex: 1; font-weight: 500; color: var(--heading); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .item-tools { display: flex; gap: .3rem; }
+    .item-body { padding: .2rem 1rem 1.1rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+    .add { margin-top: .2rem; }
+
+    .errors { background: var(--accent-soft); border: 1px solid var(--accent); color: var(--accent-hover); border-radius: var(--radius); padding: .8rem 1rem; margin-bottom: 1rem; font-size: .9rem; }
+    .errors ul { margin: .3rem 0 0 1.1rem; }
+
+    .help { margin-top: 2rem; font-size: .88rem; color: var(--muted); }
+    .help h3 { font-size: .95rem; color: var(--heading); margin-bottom: .4rem; }
+    .help ol { margin-left: 1.2rem; display: grid; gap: .3rem; }
+    .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+    @media (max-width: 820px) {
+      .layout { grid-template-columns: 1fr; }
+      .tabs { position: static; flex-direction: row; overflow-x: auto; padding-bottom: .3rem; }
+      .tabs hr { display: none; }
+      .tab { white-space: nowrap; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <h1>Mise à jour du portfolio<small>Les modifications sont gardées en brouillon dans ce navigateur jusqu’à l’enregistrement.</small></h1>
+    <span class="status" id="status" role="status">Chargement…</span>
+    <div class="actions">
+      <button class="btn" id="btn-preview" type="button">Aperçu du site</button>
+      <button class="btn btn-primary" id="btn-save" type="button">Enregistrer content.js</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="tabs" id="tabs" role="tablist" aria-label="Rubriques"></nav>
+    <main>
+      <div id="errors"></div>
+      <section id="panel" role="tabpanel"></section>
+
+      <div class="help card">
+        <h3>Publier vos modifications</h3>
+        <ol>
+          <li>Modifiez les rubriques, puis cliquez sur <strong>Aperçu du site</strong> pour vérifier le rendu.</li>
+          <li>Cliquez sur <strong>Enregistrer content.js</strong>. Avec Chrome ou Edge, choisissez le fichier <code>assets/js/content.js</code> du portfolio pour le remplacer directement ; sinon le fichier est téléchargé et vous le copiez à cet endroit.</li>
+          <li>Pour un site en ligne sur GitHub : envoyez le nouveau <code>assets/js/content.js</code> (et vos nouvelles images) dans le dépôt.</li>
+          <li>Images, captures et CV : copiez les fichiers dans <code>assets/img/</code> ou <code>assets/cv/</code>, puis indiquez leur chemin dans le champ correspondant.</li>
+        </ol>
+        <p style="margin-top:.9rem" class="actions">
+          <button class="btn btn-small" id="btn-export" type="button">Exporter une sauvegarde (.json)</button>
+          <label class="btn btn-small">Importer une sauvegarde<input type="file" id="file-import" accept="application/json,.json" class="visually-hidden"></label>
+          <button class="btn btn-small btn-danger" id="btn-reset" type="button">Abandonner le brouillon</button>
+        </p>
+      </div>
+    </main>
+  </div>
+
+  <script src="assets/js/content.js"></script>
+  <script>
+  (function () {
+    "use strict";
+
+    /* ================================================================
+       1. DONNÉES
+       ================================================================ */
+    const VARS = ["SITE", "UI", "SKILLS", "PROJECTS", "EXPERIENCES", "TEACHING", "PUBLICATIONS", "CERTIFICATIONS", "EDUCATION"];
+    const DRAFT_KEY = "portfolio-draft";
+    const clone = (v) => JSON.parse(JSON.stringify(v));
+
+    const fromFile = {};
+    VARS.forEach((name) => {
+      try { fromFile[name] = clone(eval(name)); } catch (e) { fromFile[name] = name === "SITE" || name === "UI" ? {} : []; }
+    });
+    let fileJson = JSON.stringify(fromFile);
+    // Empreinte courte de content.js : détecte un fichier modifié depuis le brouillon
+    const hash = (str) => { let h = 0; for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0; return String(h); };
+    const BASE_KEY = "portfolio-draft-base";
+
+    const store = {
+      get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+      set(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } },
+      del(k) { try { localStorage.removeItem(k); } catch (e) { /* ignoré */ } },
+    };
+
+    let data = clone(fromFile);
+    try {
+      const draft = JSON.parse(store.get(DRAFT_KEY) || "null");
+      if (draft && draft.SITE && draft.UI) {
+        const base = store.get(BASE_KEY);
+        const fileChanged = base && base !== hash(fileJson);
+        if (!fileChanged || confirm("content.js a été modifié depuis votre dernier brouillon.\n\nOK : reprendre le brouillon\nAnnuler : repartir du fichier content.js actuel")) {
+          data = Object.assign(clone(fromFile), draft);
+        } else {
+          store.del("portfolio-draft");
+        }
+      }
+    } catch (e) { /* brouillon illisible */ }
+
+    const get = (path) => path.reduce((o, k) => (o == null ? undefined : o[k]), data);
+    const set = (path, value) => {
+      const parent = get(path.slice(0, -1));
+      parent[path[path.length - 1]] = value;
+    };
+
+    /* ================================================================
+       2. VOCABULAIRE DES CHAMPS
+       ================================================================ */
+    const LABELS = {
+      name: "Nom", email: "Email", phone: "Téléphone", linkedin: "Lien LinkedIn", github: "Lien du code (GitHub…)",
+      cv: "CV à télécharger", photo: "Photo", formspreeId: "Identifiant Formspree", fr: "Français", en: "Anglais",
+      meta: "Référencement (Google, partage)", description: "Description", a11y: "Accessibilité", nav: "Menu",
+      status: "Pastille de statut", hello: "Salutation", title: "Titre", pitch: "Phrase d’accroche",
+      availability: "Encadré de disponibilités", label: "Libellé", value: "Valeur", rhythm: "Ligne sous l’encadré",
+      ctaProjects: "Bouton « projets »", ctaCv: "Bouton « CV »",
+      paragraphs: "Paragraphes de présentation", pipelineTitle: "Titre de la chaîne de valeur", pipeline: "Étapes de la chaîne de valeur",
+      text: "Texte", icon: "Icône", educationTitle: "Titre « Formation »", languagesTitle: "Titre « Langues »",
+      softTitle: "Titre des domaines d’expertise", certificationsTitle: "Titre « Certifications »",
+      languages: "Langues parlées", level: "Niveau", hobbiesTitle: "Titre de la rubrique (distinctions)", hobbies: "Distinctions",
+      soft: "Domaines d’expertise",
+      id: "Identifiant (adresse du projet)", categories: "Filtres", pro: "Réalisé en entreprise / en poste", cover: "Visuel généré",
+      image: "Image de couverture", demo: "Lien en ligne (plateforme, démo)", videos: "Vidéos", screenshots: "Captures d’écran",
+      stack: "Outils, technos, méthodes", summary: "Résumé (carte)", context: "Contexte", steps: "Ce que j’ai fait",
+      results: "Résultats", learnings: "Ce que j’en retiens",
+      company: "Organisme", location: "Lieu", projectId: "Projet associé", role: "Poste / rôle", period: "Période",
+      missions: "Missions", impact: "Impact",
+      org: "Établissement / organisme", items: "Éléments", type: "Type", link: "Lien", school: "Établissement", degree: "Diplôme",
+      intro: "Introduction", filters: "Noms des filtres", actions: "Boutons des cartes", detail: "Fenêtre de détail",
+      footer: "Pied de page", publicationsTitle: "Titre « publications »", open: "Bouton « consulter »",
+      issuer: "Organisme", date: "Date", certificatesGalleryTitle: "Titre de la galerie des certificats",
+    };
+    const HINTS = {
+      "SITE.phone": "Laissez vide pour ne pas afficher de numéro sur le site.",
+      "SITE.github": "Laissez vide pour masquer le bouton GitHub.",
+      "SITE.photo": "Copiez la photo dans assets/img/ puis indiquez son chemin (format portrait conseillé).",
+      "SITE.cv": "Copiez le PDF dans assets/cv/ puis indiquez son chemin.",
+      "SITE.formspreeId": "Créez un formulaire gratuit sur formspree.io : si l’adresse est formspree.io/f/abcd123, saisissez abcd123.",
+      github: "Lien vers le code · « prive » pour afficher « Projet interne » · vide pour masquer.",
+      image: "Chemin d’une image (ex. assets/img/projets/prism/cover.png). Vide = visuel généré.",
+      "CERTIFICATIONS.link": "Facultatif : fichier ouvert au clic (ex. le PDF dans assets/certificats/). Vide = l’image.",
+      "CERTIFICATIONS.image": "Aperçu du certificat : copiez l’image dans assets/certificats/ puis indiquez son chemin.",
+      screenshots: "Un chemin d’image par ligne (ex. assets/img/projets/prism/1.png).",
+      videos: "Lien YouTube, Loom, Vimeo ou fichier .mp4.",
+      id: "Minuscules, chiffres et tirets uniquement ; doit être unique.",
+      demo: "Affiche un bouton « Voir » sur la carte.",
+      categories: "Les noms des filtres se modifient dans « Textes de l’interface » → projects → filters.",
+      link: "Facultatif : lien vers le document en ligne.",
+    };
+    const LONG = new Set(["pitch", "summary", "context", "learnings", "impact", "text", "description", "intro"]);
+    const LONG_ITEMS = new Set(["paragraphs", "steps", "results", "missions", "items"]);
+
+    const COVERS = {
+      bars: "Barres (tableau de bord)", flow: "Flux ETL", traffic: "Carrefour / feux", map: "Carte / réseau",
+      survey: "Questionnaire", detection: "Détection (vue de drone)", agents: "Réseau de nœuds", topics: "Thématiques", cluster: "Nuage de points",
+      tree: "Arbre de décision", cnn: "Couches (deep learning)", chat: "Conversation",
+    };
+    const ICONS = {
+      chart: "Graphique", workflow: "Flux de données", database: "Base de données", cpu: "Processeur / IA",
+      sparkles: "Étincelles", code: "Code", git: "Git", list: "Liste / enquête", target: "Cible", layers: "Couches",
+      search: "Loupe", bulb: "Idée", graduation: "Diplôme", user: "Personne", languages: "Langues", "map-pin": "Lieu",
+      calendar: "Calendrier", briefcase: "Mallette", image: "Image", video: "Vidéo", phone: "Téléphone", mail: "Email",
+      bike: "Vélo", plane: "Avion", footprints: "Course à pied",
+    };
+
+    // Modèles utilisés par les boutons « Ajouter »
+    const blankProjectText = () => ({ title: "Nouveau projet", label: "", summary: "", context: "", steps: [], results: [], learnings: "" });
+    const TEMPLATES = {
+      PROJECTS: () => ({ id: "nouveau-projet-" + Date.now().toString(36), categories: [], pro: false, cover: "bars", image: "", github: "", demo: "", videos: [], screenshots: [], stack: [], fr: blankProjectText(), en: Object.assign(blankProjectText(), { title: "New project" }) }),
+      EXPERIENCES: () => ({ company: "Nouvel organisme", location: "", projectId: "", stack: [], fr: { role: "", period: "", context: "", missions: [], impact: "" }, en: { role: "", period: "", context: "", missions: [], impact: "" } }),
+      TEACHING: () => ({ icon: "graduation", org: "Nouvel établissement", fr: { role: "", period: "", items: [] }, en: { role: "", period: "", items: [] } }),
+      PUBLICATIONS: () => ({ type: { fr: "", en: "" }, title: { fr: "Nouveau document", en: "" }, link: "" }),
+      CERTIFICATIONS: () => ({ name: { fr: "Nouveau certificat", en: "" }, issuer: "", date: { fr: "", en: "" }, image: "", link: "" }),
+      EDUCATION: () => ({ school: "", fr: { degree: "Nouveau diplôme", period: "" }, en: { degree: "", period: "" } }),
+      SKILLS: () => ({ icon: "code", name: { fr: "Nouvelle catégorie", en: "" }, items: [] }),
+      availability: () => ({ label: "", value: "" }),
+      languages: () => ({ name: "", level: "" }),
+      hobbies: () => ({ icon: "target", name: "", text: "" }),
+      pipeline: () => ({ icon: "workflow", title: "", text: "" }),
+    };
+    // Listes où le plus récent se place en tête
+    const ADD_ON_TOP = new Set(["PROJECTS", "EXPERIENCES", "TEACHING", "PUBLICATIONS", "EDUCATION"]);
+
+    /* ================================================================
+       3. RUBRIQUES (onglets)
+       ================================================================ */
+    let editLang = "fr";
+    const TABS = [
+      { id: "site", label: "Infos personnelles", path: () => ["SITE"], bilingual: true, intro: "Coordonnées, liens, photo et CV (le sélecteur FR / EN choisit le CV de chaque langue)." },
+      { id: "hero", label: "Accueil", path: () => ["UI", editLang, "hero"], bilingual: true, intro: "Le haut de page : titre, accroche, disponibilités." },
+      { id: "about", label: "À propos", path: () => ["UI", editLang, "about"], bilingual: true, intro: "Présentation, chaîne de valeur, langues, domaines d’expertise et distinctions." },
+      { id: "projects", label: "Projets", path: () => ["PROJECTS"], bilingual: true, intro: "Chaque projet a une carte et une fenêtre de détail. Utilisez le sélecteur FR / EN pour saisir la traduction." },
+      { id: "xp", label: "Expériences", path: () => ["EXPERIENCES"], bilingual: true, intro: "Du plus récent au plus ancien." },
+      { id: "skills", label: "Compétences", path: () => ["SKILLS"], bilingual: true, intro: "Catégories de compétences et leurs éléments." },
+      { id: "teaching", label: "Enseignement", path: () => ["TEACHING"], bilingual: true, intro: "Cours et formations animées." },
+      { id: "pubs", label: "Publications", path: () => ["PUBLICATIONS"], bilingual: true, intro: "Mémoires, articles, analyses et supports." },
+      { id: "certs", label: "Certifications", path: () => ["CERTIFICATIONS"], bilingual: true, intro: "Affichées dans « À propos ». Une ligne simple = pastille. Un certificat avec image apparaît aussi dans la galerie « Certificats » : copiez son image (et éventuellement son PDF) dans assets/certificats/." },
+      { id: "edu", label: "Formation", path: () => ["EDUCATION"], bilingual: true, intro: "Diplômes, du plus récent au plus ancien." },
+      { sep: true },
+      { id: "ui", label: "Textes de l’interface", path: () => ["UI", editLang], bilingual: true, skip: ["hero", "about"], intro: "Menu, titres de sections, boutons, formulaire, référencement. Rarement utile." },
+    ];
+    let currentTab = store.get("portfolio-admin-tab") || "site";
+    if (!TABS.some((t) => t.id === currentTab)) currentTab = "site";
+
+    /* ================================================================
+       4. OUTILS D'AFFICHAGE
+       ================================================================ */
+    const el = (tag, props = {}, ...children) => {
+      const node = document.createElement(tag);
+      Object.entries(props).forEach(([k, v]) => {
+        if (k === "class") node.className = v;
+        else if (k === "text") node.textContent = v;
+        else if (k.startsWith("on")) node.addEventListener(k.slice(2), v);
+        else if (v !== undefined && v !== null && v !== false) node.setAttribute(k, v === true ? "" : v);
+      });
+      children.flat().forEach((c) => c != null && node.append(c));
+      return node;
+    };
+    const pathKey = (path) => path.join(".");
+    const lastKey = (path) => { for (let i = path.length - 1; i >= 0; i--) if (typeof path[i] === "string" && !["fr", "en"].includes(path[i])) return path[i]; return ""; };
+    const isPair = (v) => v && typeof v === "object" && !Array.isArray(v) && Object.keys(v).every((k) => k === "fr" || k === "en") && Object.keys(v).length > 0;
+    const pairText = (v) => (isPair(v) ? v[editLang] || v.fr || v.en || "" : v);
+    const hintFor = (path) => HINTS[pathKey(path)] || HINTS[path[0] + "." + lastKey(path)] || HINTS[lastKey(path)];
+
+    // Titre résumé d'un élément de liste
+    function itemTitle(item, index) {
+      if (typeof item === "string") return item || "(vide)";
+      if (isPair(item)) return pairText(item) || "(vide)";
+      const L = item[editLang] || item.fr || {};
+      if (item.company) return [L.role, item.company].filter(Boolean).join(" · ");
+      if (item.org) return item.org;
+      if (item.school !== undefined) return [L.degree, item.school].filter(Boolean).join(" · ");
+      if (L.title) return L.title;
+      if (item.title) return pairText(item.title);
+      if (item.name) return pairText(item.name);
+      if (item.label) return [item.label, item.value].filter(Boolean).join(" : ");
+      return "Élément " + (index + 1);
+    }
+
+    /* ================================================================
+       5. RENDU D'UN CHAMP (récursif)
+       ================================================================ */
+    const openItems = new Set();
+
+    function renderValue(path, value, opts = {}) {
+      const key = lastKey(path);
+
+      // Champs spéciaux
+      if (key === "categories" && Array.isArray(value)) return renderCategories(path, value);
+      if (key === "cover") return renderSelect(path, value, COVERS);
+      if (key === "icon") return renderSelect(path, value, ICONS);
+      if (key === "projectId") {
+        const opts2 = { "": "(aucun)" };
+        data.PROJECTS.forEach((p) => (opts2[p.id] = (p.fr && p.fr.title) || p.id));
+        return renderSelect(path, value, opts2);
+      }
+
+      if (typeof value === "boolean") {
+        return el("label", { class: "check" },
+          el("input", { type: "checkbox", checked: value, onchange: (e) => { set(path, e.target.checked); changed(); } }),
+          "Oui");
+      }
+      if (typeof value === "string" || typeof value === "number") return renderText(path, String(value), opts.long);
+      if (Array.isArray(value)) return renderList(path, value);
+      if (isPair(value)) {
+        if (!(editLang in value)) value[editLang] = "";
+        return renderText(path.concat(editLang), value[editLang], opts.long);
+      }
+      if (value && typeof value === "object") return renderObject(path, value, opts.skip);
+      return el("span");
+    }
+
+    function renderText(path, value, long) {
+      const key = lastKey(path);
+      const isLong = long || LONG.has(key) || value.length > 90;
+      const input = isLong
+        ? el("textarea", { rows: Math.min(8, Math.max(3, Math.ceil(value.length / 80))) })
+        : el("input", { type: "text" });
+      input.value = value;
+      input.addEventListener("input", () => { set(path, input.value); changed(true); refreshTitles(input); });
+      if (["image", "photo"].includes(key) || lastKey(path.slice(0, -1)) === "screenshots") {
+        const wrap = el("div", {}, input);
+        const img = el("img", { class: "thumb", alt: "" });
+        const update = () => {
+          const v = input.value.trim();
+          img.hidden = !/\.(png|jpe?g|webp|gif|svg)$/i.test(v);
+          if (!img.hidden) img.src = v;
+        };
+        img.addEventListener("error", () => (img.hidden = true));
+        input.addEventListener("change", update);
+        update();
+        wrap.append(img);
+        return wrap;
+      }
+      return input;
+    }
+
+    function renderSelect(path, value, options) {
+      const select = el("select", { onchange: (e) => { set(path, e.target.value); changed(); } });
+      if (!(value in options)) options = Object.assign({ [value]: value }, options);
+      Object.entries(options).forEach(([v, label]) => select.append(el("option", { value: v, selected: v === value, text: label })));
+      return select;
+    }
+
+    function renderCategories(path, value) {
+      const filters = (data.UI.fr && data.UI.fr.projects && data.UI.fr.projects.filters) || {};
+      const box = el("div");
+      Object.keys(filters).filter((k) => k !== "all").forEach((k) => {
+        box.append(el("label", { class: "check" },
+          el("input", {
+            type: "checkbox", checked: value.includes(k),
+            onchange: (e) => {
+              const cur = get(path).filter((c) => c !== k);
+              if (e.target.checked) cur.push(k);
+              set(path, cur); changed();
+            },
+          }),
+          pairText(filters[k]) || k));
+      });
+      return box;
+    }
+
+    function field(path, value, opts = {}) {
+      const key = lastKey(path);
+      const hint = hintFor(path);
+      const isContainer = value && typeof value === "object" && !isPair(value) && !Array.isArray(value);
+      const labelText = (LABELS[key] || key) + (isPair(value) ? " (" + editLang.toUpperCase() + ")" : "");
+      const wrap = el("div", { class: "field" });
+      if (isContainer) {
+        wrap.append(el("div", { class: "group-title", text: labelText }));
+        if (hint) wrap.append(el("p", { class: "hint", text: hint }));
+        wrap.append(renderValue(path, value, opts));
+        return wrap;
+      }
+      const control = renderValue(path, value, opts);
+      const id = "f-" + pathKey(path).replace(/[^\w-]/g, "-");
+      const focusable = control.matches && control.matches("input,textarea,select") ? control : control.querySelector && control.querySelector("input[type=text],textarea,select");
+      if (focusable && !Array.isArray(value) && lastKey(path) !== "categories") focusable.id = id;
+      wrap.append(el(focusable && focusable.id === id ? "label" : "span", { class: "label", for: focusable && focusable.id === id ? id : null, text: labelText }));
+      if (hint) wrap.append(el("p", { class: "hint", text: hint }));
+      wrap.append(control);
+      return wrap;
+    }
+
+    function renderObject(path, obj, skip = []) {
+      const box = el("div", { class: path.length > 2 ? "group" : "fields" });
+      // Objets bilingues { fr: {...}, en: {...} } : on n'affiche que la langue choisie
+      const keys = Object.keys(obj).filter((k) => !skip.includes(k));
+      keys.forEach((k) => {
+        if ((k === "fr" || k === "en") && obj[k] && typeof obj[k] === "object") {
+          if (k !== editLang) return;
+          box.append(el("div", { class: "group-title", text: (k === "fr" ? "Textes en français" : "Textes en anglais") + " — changez avec FR / EN en haut" }));
+          box.append(renderObject(path.concat(k), obj[k]));
+          return;
+        }
+        box.append(field(path.concat(k), obj[k]));
+      });
+      return box;
+    }
+
+    function renderList(path, arr) {
+      const key = lastKey(path);
+      const box = el("div", { class: "list" });
+
+      arr.forEach((item, i) => {
+        const itemPath = path.concat(i);
+        const tools = el("span", { class: "item-tools" },
+          el("button", { type: "button", class: "btn btn-small btn-icon", title: "Monter", "aria-label": "Monter", disabled: i === 0, onclick: (e) => { e.preventDefault(); move(path, i, -1); } }, "↑"),
+          el("button", { type: "button", class: "btn btn-small btn-icon", title: "Descendre", "aria-label": "Descendre", disabled: i === arr.length - 1, onclick: (e) => { e.preventDefault(); move(path, i, 1); } }, "↓"),
+          el("button", { type: "button", class: "btn btn-small btn-icon btn-danger", title: "Supprimer", "aria-label": "Supprimer", onclick: (e) => { e.preventDefault(); remove(path, i, item); } }, "✕"));
+
+        if (item && typeof item === "object" && !isPair(item)) {
+          const details = el("details", { class: "item", "data-path": pathKey(itemPath) });
+          if (openItems.has(pathKey(itemPath))) details.open = true;
+          details.addEventListener("toggle", () => (details.open ? openItems.add(pathKey(itemPath)) : openItems.delete(pathKey(itemPath))));
+          const title = el("span", { class: "item-title", text: itemTitle(item, i) });
+          details.append(el("summary", {}, title, tools));
+          const body = el("div", { class: "item-body" });
+          // Contenu construit à l'ouverture seulement (listes longues plus rapides)
+          const build = () => { if (!body.childElementCount) body.append(renderObject(itemPath, item)); };
+          if (details.open) build();
+          details.addEventListener("toggle", () => details.open && build());
+          details.append(body);
+          box.append(details);
+        } else {
+          const control = renderValue(itemPath, item, { long: LONG_ITEMS.has(key) });
+          control.setAttribute && control.setAttribute("aria-label", (LABELS[key] || key) + " " + (i + 1));
+          box.append(el("div", { class: "row" }, control, tools));
+        }
+      });
+
+      box.append(el("div", { class: "add" },
+        el("button", { type: "button", class: "btn btn-small", onclick: () => add(path, key) }, "+ Ajouter")));
+      return box;
+    }
+
+    // Met à jour le titre des éléments repliés quand on tape dedans
+    function refreshTitles(input) {
+      let node = input.closest("details.item");
+      while (node) {
+        const p = node.dataset.path.split(".").map((s) => (/^\d+$/.test(s) ? Number(s) : s));
+        node.querySelector(":scope > summary .item-title").textContent = itemTitle(get(p), p[p.length - 1]);
+        node = node.parentElement.closest("details.item");
+      }
+    }
+
+    /* ================================================================
+       6. ACTIONS SUR LES LISTES
+       ================================================================ */
+    function add(path, key) {
+      const arr = get(path);
+      const make = TEMPLATES[key] || (() => (arr.length && isPair(arr[0]) ? { fr: "", en: "" } : ""));
+      const item = make();
+      const top = ADD_ON_TOP.has(key) && path.length === 1;
+      const index = top ? 0 : arr.length;
+      // Les éléments ouverts se décalent d'un cran quand on ajoute en tête
+      if (top) {
+        const shifted = [...openItems].filter((k) => k.startsWith(pathKey(path) + "."));
+        shifted.forEach((k) => openItems.delete(k));
+        shifted.forEach((k) => { const parts = k.split("."); parts[path.length] = String(Number(parts[path.length]) + 1); openItems.add(parts.join(".")); });
+      }
+      arr.splice(index, 0, item);
+      if (typeof item === "object") openItems.add(pathKey(path.concat(index)));
+      changed(); render();
+      requestAnimationFrame(() => {
+        const target = document.querySelector(`[data-path="${pathKey(path.concat(index))}"]`);
+        if (target) target.scrollIntoView({ block: "center", behavior: "smooth" });
+      });
+    }
+    function remove(path, i, item) {
+      const label = itemTitle(item, i);
+      if (typeof item === "object" && !confirm("Supprimer « " + label + " » ?")) return;
+      get(path).splice(i, 1);
+      openItems.clear();
+      changed(); render();
+    }
+    function move(path, i, dir) {
+      const arr = get(path);
+      const j = i + dir;
+      if (j < 0 || j >= arr.length) return;
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+      const a = pathKey(path.concat(i)), b = pathKey(path.concat(j));
+      const aOpen = openItems.has(a), bOpen = openItems.has(b);
+      openItems.delete(a); openItems.delete(b);
+      if (aOpen) openItems.add(b);
+      if (bOpen) openItems.add(a);
+      changed(); render();
+    }
+
+    /* ================================================================
+       7. BROUILLON, VALIDATION, ENREGISTREMENT
+       ================================================================ */
+    const statusEl = document.getElementById("status");
+    let saveTimer = null;
+
+    function changed(debounce) {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(saveDraft, debounce ? 400 : 0);
+      if (!debounce) updateCounts();
+    }
+    function saveDraft() {
+      const json = JSON.stringify(data);
+      let ok = true;
+      if (json === fileJson) { store.del(DRAFT_KEY); store.del(BASE_KEY); }
+      else { ok = store.set(DRAFT_KEY, json) && store.set(BASE_KEY, hash(fileJson)); }
+      updateStatus(ok ? null : "Le navigateur bloque le stockage : exportez une sauvegarde pour ne rien perdre.");
+      validate();
+    }
+    function updateStatus(msg) {
+      const same = JSON.stringify(data) === fileJson;
+      statusEl.className = "status " + (msg ? "dirty" : same ? "ok" : "dirty");
+      statusEl.textContent = msg || (same ? "À jour avec content.js" : "Brouillon non publié — enregistrez content.js");
+    }
+
+    function validate() {
+      const errors = [];
+      const ids = new Map();
+      data.PROJECTS.forEach((p, i) => {
+        const name = (p.fr && p.fr.title) || "projet " + (i + 1);
+        if (!/^[a-z0-9-]+$/.test(p.id || "")) errors.push(`Projet « ${name} » : l’identifiant doit contenir uniquement des minuscules, chiffres et tirets.`);
+        if (ids.has(p.id)) errors.push(`Deux projets ont le même identifiant « ${p.id} ».`);
+        ids.set(p.id, true);
+      });
+      data.EXPERIENCES.forEach((x) => {
+        if (x.projectId && !ids.has(x.projectId)) errors.push(`Expérience « ${x.company} » : le projet associé « ${x.projectId} » n’existe plus.`);
+      });
+      const box = document.getElementById("errors");
+      box.replaceChildren();
+      if (errors.length) {
+        box.append(el("div", { class: "errors", role: "alert" },
+          el("strong", { text: "À corriger avant d’enregistrer :" }),
+          el("ul", {}, errors.map((e) => el("li", { text: e })))));
+      }
+      return errors;
+    }
+
+    function buildContentJs() {
+      const date = new Date().toLocaleString("fr-FR");
+      let out = `/* =====================================================================
+   content.js — TOUT le contenu du site (français + anglais)
+   ---------------------------------------------------------------------
+   Généré par admin.html le ${date}.
+   Pour le modifier : ouvrez admin.html dans votre navigateur,
+   ou éditez ce fichier à la main.
+   Les variables sont déclarées avec « let » pour l'aperçu de admin.html.
+   ===================================================================== */
+
+`;
+      VARS.forEach((name) => { out += `let ${name} = ${JSON.stringify(data[name], null, 2)};\n\n`; });
+      return out;
+    }
+
+    let fileHandle = null;
+    async function saveFile() {
+      clearTimeout(saveTimer); saveDraft();
+      if (validate().length) { window.scrollTo({ top: 0, behavior: "smooth" }); return; }
+      const text = buildContentJs();
+
+      if (window.showSaveFilePicker) {
+        try {
+          if (!fileHandle) {
+            fileHandle = await window.showSaveFilePicker({
+              suggestedName: "content.js",
+              types: [{ description: "Fichier JavaScript", accept: { "text/javascript": [".js"] } }],
+            });
+          }
+          const w = await fileHandle.createWritable();
+          await w.write(text);
+          await w.close();
+          fileJson = JSON.stringify(data);
+          store.del(DRAFT_KEY); store.del(BASE_KEY);
+          statusEl.className = "status ok";
+          statusEl.textContent = "Enregistré dans " + fileHandle.name + " — rechargez le site pour voir le résultat";
+          return;
+        } catch (e) {
+          if (e && e.name === "AbortError") return;
+          fileHandle = null; // on bascule sur le téléchargement
+        }
+      }
+      download("content.js", text, "text/javascript");
+      statusEl.className = "status ok";
+      statusEl.textContent = "content.js téléchargé — copiez-le dans assets/js/";
+    }
+
+    function download(name, text, type) {
+      const url = URL.createObjectURL(new Blob([text], { type: type + ";charset=utf-8" }));
+      const a = el("a", { href: url, download: name });
+      document.body.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    /* ================================================================
+       8. INTERFACE
+       ================================================================ */
+    function countFor(tab) {
+      if (tab.sep) return "";
+      const v = get(tab.path());
+      return Array.isArray(v) ? String(v.length) : "";
+    }
+    function updateCounts() {
+      document.querySelectorAll(".tab").forEach((b) => {
+        const tab = TABS.find((t) => t.id === b.dataset.tab);
+        b.querySelector(".count").textContent = countFor(tab);
+      });
+    }
+
+    function renderTabs() {
+      const nav = document.getElementById("tabs");
+      nav.replaceChildren();
+      TABS.forEach((tab) => {
+        if (tab.sep) return nav.append(el("hr"));
+        nav.append(el("button", {
+          type: "button", class: "tab", role: "tab", "data-tab": tab.id,
+          "aria-selected": String(tab.id === currentTab),
+          onclick: () => { currentTab = tab.id; store.set("portfolio-admin-tab", tab.id); openItems.clear(); renderTabs(); render(); window.scrollTo({ top: 0 }); },
+        }, el("span", { text: tab.label }), el("span", { class: "count", text: countFor(tab) })));
+      });
+    }
+
+    function render() {
+      const tab = TABS.find((t) => t.id === currentTab);
+      const panel = document.getElementById("panel");
+      const scroll = window.scrollY;
+      panel.replaceChildren();
+
+      const head = el("div", { class: "panel-head" }, el("h2", { text: tab.label }));
+      if (tab.bilingual) {
+        head.append(el("div", { class: "lang-switch", role: "group", "aria-label": "Langue des textes" },
+          ["fr", "en"].map((l) => el("button", {
+            type: "button", "aria-pressed": String(l === editLang),
+            onclick: () => { editLang = l; render(); },
+          }, l === "fr" ? "FR" : "EN"))));
+      }
+      panel.append(head);
+      if (tab.intro) panel.append(el("p", { class: "panel-intro", text: tab.intro }));
+
+      const path = tab.path();
+      const value = get(path);
+      const content = Array.isArray(value) ? renderList(path, value) : renderObject(path, value, tab.skip || []);
+      panel.append(Array.isArray(value) ? content : el("div", { class: "card" }, content));
+      window.scrollTo({ top: scroll });
+    }
+
+    document.getElementById("btn-save").addEventListener("click", saveFile);
+    document.getElementById("btn-preview").addEventListener("click", () => {
+      clearTimeout(saveTimer); saveDraft();
+      window.open("index.html?apercu", "portfolio-apercu");
+    });
+    document.getElementById("btn-export").addEventListener("click", () => {
+      download("portfolio-sauvegarde-" + new Date().toISOString().slice(0, 10) + ".json", JSON.stringify(data, null, 2), "application/json");
+    });
+    document.getElementById("file-import").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      e.target.value = "";
+      if (!file) return;
+      try {
+        const imported = JSON.parse(await file.text());
+        if (!imported.SITE || !imported.UI) throw new Error("format");
+        if (!confirm("Remplacer le contenu actuel par cette sauvegarde ?")) return;
+        data = Object.assign(clone(fromFile), imported);
+        openItems.clear(); changed(); renderTabs(); render();
+      } catch (err) {
+        alert("Ce fichier n’est pas une sauvegarde valide du portfolio.");
+      }
+    });
+    document.getElementById("btn-reset").addEventListener("click", () => {
+      if (!confirm("Abandonner toutes les modifications non enregistrées et repartir de content.js ?")) return;
+      store.del(DRAFT_KEY); store.del(BASE_KEY);
+      data = clone(fromFile);
+      openItems.clear(); renderTabs(); render(); updateStatus(); validate();
+    });
+    window.addEventListener("beforeunload", () => { clearTimeout(saveTimer); saveDraft(); });
+
+    renderTabs();
+    render();
+    updateStatus();
+    validate();
+  })();
+  </script>
+</body>
+</html>
